@@ -9,6 +9,12 @@ boxes = [
   {:name => 'el6',      :libvirt => 'fm-centos64',   :image_name => /CentOS.*6\.4/, :default => true, :pty => true},
 ]
 
+ips = {
+  'squeeze' => '172.20.10.160',
+  'precise' => '172.20.10.161',
+  'wheezy'  => '172.20.10.162',
+}
+
 if ENV['box']
   boxes << {:name => ENV['box'], :libvirt => ENV['box'], :image_name => ENV['box'], :os_user => ENV['box']}
 end
@@ -40,9 +46,11 @@ Vagrant.configure("2") do |config|
       config.vm.provider :openstack do |p, override|
         override.vm.box = 'dummy'
         p.server_name   = machine.vm.hostname
-        p.flavor        = /m1.tiny/
+        p.flavor        = box[:name] == 'squeeze' ? /m1.small/ : /m1.tiny/
         p.image         = box[:image_name] # Might as well use consistent image names
         p.ssh_username  = box[:os_user]  # login for the VM
+
+        p.floating_ip   = ips[box[:name]] # Must be hardcoded, cannot ask Openstack for an IP
 
         # ~/.vagrant.d/Vagrantfile will need
         # p.username     = "admin"                             # e.g. "#{ENV['OS_USERNAME']}"
